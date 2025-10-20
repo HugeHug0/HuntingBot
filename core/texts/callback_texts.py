@@ -1,0 +1,5 @@
+profile_hunter_register = 'hunter_register'
+profile_hunting_farm_register = 'hunting_farm_register'
+hunting_request = 'hunting_request'
+wh_content = 'wh_content'
+settings = 'settings'

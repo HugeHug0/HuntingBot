@@ -3,12 +3,11 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from core.filters.chat_type_filters import PrivateChatFilter, private
-from core.handlers.main_menu_handlers import main_menu_handler
 from core.texts import message_texts
 
 router = Router()
 
 
 @router.message(CommandStart(), PrivateChatFilter([private]))
-async def start_command_handler(message: Message):
-    await main_menu_handler(message)
+async def main_menu_handler(message: Message):
+    await message.answer(text=message_texts.main_menu_message, )

@@ -4,15 +4,16 @@ from dataclasses import dataclass
 @dataclass()
 class Bots:  # Класс для хранения данных для бота
     bot_token: str
-    db_dsn: str
+    request_group_id: int
+    admin_ids: list
+    chat_members_link: str
 
 
 @dataclass()
 class Settings:
     bots: Bots
-    request_group_id: int
-    admin_ids: list
-    chat_members_link: str
+    postgres_dsn: str
+    redis_dsn: str
 
 
 def get_settings(path: str = None):
@@ -25,20 +26,26 @@ def get_settings(path: str = None):
     db_host = env.str("DB_HOST", "db")
     db_port = env.str("DB_PORT", "5432")
 
+    redis_host = env.str("REDIS_HOST", "redis")
+    redis_port = env.int("REDIS_PORT", 6379)
+    redis_db = env.int("REDIS_DB", 0)
+
+    redis_dsn = f"redis://{redis_host}:{redis_port}/{redis_db}"
+    postgres_dsn = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
     request_group_id = env.int('REQUESTS_GROUP_ID')
     chat_members_link = env.str('CHAT_MEMBERS_LINK')
     admin_ids = [int(i) for i in env.str('ADMIN_IDS').split(',')]
 
-    db_dsn = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-
     return Settings(  # Создание dataclass для хранения данных
         bots=Bots(
             bot_token=env.str('BOT_TOKEN'),
-            db_dsn=db_dsn
+            request_group_id=request_group_id,
+            admin_ids=admin_ids,
+            chat_members_link=chat_members_link
         ),
-        request_group_id=request_group_id,
-        admin_ids=admin_ids,
-        chat_members_link=chat_members_link,
+        postgres_dsn=postgres_dsn,
+        redis_dsn=redis_dsn
     )
 
 settings = get_settings()

@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 
+from core.handlers import start_handlers, main_menu_handlers
 from core.settings import settings
 
 
@@ -15,6 +16,8 @@ async def main():
 
 
     dp = Dispatcher()
+    dp.include_router(start_handlers.router)
+    dp.include_router(main_menu_handlers.router)
 
     try:
         await dp.start_polling(bot)
