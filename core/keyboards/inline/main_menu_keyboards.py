@@ -12,9 +12,9 @@ def main_menu_hunter_keyboard() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def main_menu_hunting_farm_keyboard() -> InlineKeyboardMarkup:
+def main_menu_hunting_base_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=button_texts.profile_register, callback_data=callback_texts.profile_hunting_farm_register)],
+        [InlineKeyboardButton(text=button_texts.profile_register, callback_data=callback_texts.profile_hunting_base_register)],
         [InlineKeyboardButton(text=button_texts.wh_content, callback_data=callback_texts.wh_content)],
         [InlineKeyboardButton(text=button_texts.settings, callback_data=callback_texts.settings)]
     ])

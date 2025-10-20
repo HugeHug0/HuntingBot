@@ -13,7 +13,9 @@ class Bots:  # Класс для хранения данных для бота
 class Settings:
     bots: Bots
     postgres_dsn: str
-    redis_dsn: str
+    redis_host: str
+    redis_port: int
+    redis_db: int
 
 
 def get_settings(path: str = None):
@@ -30,7 +32,6 @@ def get_settings(path: str = None):
     redis_port = env.int("REDIS_PORT", 6379)
     redis_db = env.int("REDIS_DB", 0)
 
-    redis_dsn = f"redis://{redis_host}:{redis_port}/{redis_db}"
     postgres_dsn = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
     request_group_id = env.int('REQUESTS_GROUP_ID')
@@ -45,7 +46,9 @@ def get_settings(path: str = None):
             chat_members_link=chat_members_link
         ),
         postgres_dsn=postgres_dsn,
-        redis_dsn=redis_dsn
+        redis_host=redis_host,
+        redis_port=redis_port,
+        redis_db=redis_db
     )
 
 settings = get_settings()
