@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text
-from sqlalchemy.orm import declarative_base
 
-Base = declarative_base()
+from core.db.postgres import Base
 
 
 class Hunter(Base):
@@ -23,6 +22,7 @@ class HuntingBase(Base):
     tg_id = Column(Integer, unique=True, nullable=False)
     name = Column(String(255), nullable=False)
     region = Column(String(255), nullable=False)
+    services = Column(Text, nullable=False)
     tg_username = Column(String(250), nullable=False)
     phone = Column(String(50), nullable=False)
     website = Column(Text(1000), nullable=True)
