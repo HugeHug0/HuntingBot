@@ -48,7 +48,7 @@ class ApplicationService:
         await state.set_data(data)
 
         if len(answers_history) < 2:
-            ValueError('Некуда возвращаться')
+            raise ValueError('Некуда возвращаться')
 
         del answers_history[-1]  # Удаляет последний ответ из истории
         await answers_history[-1]  # Ожидает предыдущий ответ
