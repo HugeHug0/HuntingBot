@@ -29,4 +29,3 @@ async def main_menu_callback_query_handler(callback: CallbackQuery, user_role=No
 
     await callback.message.answer(text=message_texts.main_menu_answer, reply_markup=keyboard())
     await callback.answer()
-

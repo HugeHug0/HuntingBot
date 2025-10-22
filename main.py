@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 
 from core.db.init_db import on_startup
-from core.handlers import start_handlers, main_menu_handlers, role_selection_handlers
+from core.handlers import start_handlers, main_menu_handlers, role_selection_handlers, hunter_registration_handlers
 from core.settings import settings
 
 
@@ -20,6 +20,7 @@ async def main():
     dp.include_router(start_handlers.router)
     dp.include_router(main_menu_handlers.router)
     dp.include_router(role_selection_handlers.router)
+    dp.include_router(hunter_registration_handlers.router)
 
     await on_startup()
 

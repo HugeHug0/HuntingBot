@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, BigInteger
+from sqlalchemy import Column, Integer, String, Text, BigInteger, Date
 
 from core.db.postgres import Base
 
@@ -13,6 +13,8 @@ class Hunter(Base):
     email = Column(String(255), nullable=True)
     region = Column(String(255), nullable=False)
     hunt_type = Column(String(255), nullable=False)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
 
 
 class HuntingBase(Base):

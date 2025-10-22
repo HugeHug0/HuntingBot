@@ -57,3 +57,4 @@ def check_user_registration(get_user_role=False, filter_user_role=None, only_reg
             return await func(event, *args, **kwargs)
         return wrapper
     return decorator
+
