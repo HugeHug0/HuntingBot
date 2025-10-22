@@ -6,3 +6,8 @@ async def get_value_from_cache_by_tg_id(tg_id: int | str):
     key = f"user:{tg_id}"
     value = await redis_client.get(key)
     return value
+
+async def delete_value_from_cache_by_tg_id(tg_id: int):
+    """Удаляет значение пользователя из Redis по tg_id."""
+    key = f"user:{tg_id}"
+    await redis_client.delete(key)

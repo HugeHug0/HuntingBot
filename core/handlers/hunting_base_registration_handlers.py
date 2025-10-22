@@ -4,30 +4,32 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from core.FSM.registration_fsms import HuntingBaseRegistrationFSM
 from core.db.postgres import AsyncSessionLocal
-from core.db_requests.postgres_requests import get_hunting_base_by_tg_id
+from core.db_requests.postgres_requests import get_hunting_base_by_tg_id, create_hunting_base_from_state
 from core.decorators.register_decorators import check_user_registration
 from core.handlers.main_menu_handlers import main_menu_handler, main_menu_callback_query_handler
 from core.keyboards.reply.registration.general_keyboards import (
-    home_buttons_keyboard, get_buttons_list_keyboard, phone_number_register_keyboard)
+    home_buttons_keyboard, get_buttons_list_keyboard, phone_number_register_keyboard, confirm_register_keyboard)
+from core.logging_config import logger
 
 from core.services.question_form_service import QuestionsFormService
 from core.texts import callback_texts, message_texts, button_texts
 from core.texts.special_names import hunting_base
-from core.utils.utils import hunter_format_registration_text, get_format_services_selected, get_services_selected, \
-    is_phone_number
+from core.utils.utils import get_format_services_selected, get_services_selected, \
+    is_phone_number, hunting_base_format_registration_text
 
 router = Router()
 
 
 # === Старт регистрации базы ===
-@router.callback_query(F.data == callback_texts.hunting_base_role_select)
+@router.callback_query(F.data == callback_texts.profile_hunting_base_register)
 @check_user_registration(filter_user_role=hunting_base)
 async def hunting_base_registration_handler(callback: CallbackQuery, state: FSMContext):
-    await callback.answer()
     async with AsyncSessionLocal() as session:
         if await get_hunting_base_by_tg_id(session, callback.from_user.id):
-            await main_menu_callback_query_handler(callback)
+            await callback.answer(message_texts.user_already_registered)
             return
+
+    await callback.answer()
 
     await callback.message.answer(message_texts.start_hunting_base_registration, reply_markup=ReplyKeyboardRemove())
 
@@ -168,14 +170,14 @@ async def hunting_base_website_process_handler(message: Message, state: FSMConte
         return
     elif message.text == button_texts.skip_btn:
         answer = message.answer(await hunting_base_format_registration_text(state),
-                                reply_markup=home_buttons_keyboard(back=True, back_home=True)
+                                reply_markup=confirm_register_keyboard()
                                 )
         await QuestionsFormService.skip(state, HuntingBaseRegistrationFSM.confirm, answer)
         return
 
     await state.update_data(website=message.text)
     answer = message.answer(await hunting_base_format_registration_text(state),
-                            reply_markup=home_buttons_keyboard(back=True, back_home=True)
+                            reply_markup=confirm_register_keyboard()
                             )
     await QuestionsFormService.next(state, HuntingBaseRegistrationFSM.confirm, answer)
 
@@ -191,5 +193,16 @@ async def hunting_base_confirm_process_handler(message: Message, state: FSMConte
         await QuestionsFormService.back(state)
         return
     elif message.text == button_texts.confirm_register_btn:
+        await state.update_data(tg_id=message.from_user.id)
+
+        async with AsyncSessionLocal() as session:
+            try:
+                await create_hunting_base_from_state(state, session)  # Сохраняет в бд
+                await message.answer(message_texts.successful_registration)
+            except Exception as e:
+                await session.rollback()
+                logger.error(f'error: {e}')
+                await message.answer(message_texts.error_registration)
+
         await state.clear()
         await main_menu_handler(message)

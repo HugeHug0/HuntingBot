@@ -3,6 +3,7 @@ from datetime import datetime
 import phonenumbers
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
+from aiogram.fsm.context import FSMContext
 
 from core.keyboards.inline.main_menu_keyboards import main_menu_hunting_base_keyboard, main_menu_hunter_keyboard
 from core.texts.special_names import hunting_base, hunter
@@ -61,6 +62,23 @@ async def hunter_format_registration_text(state) -> str:
         f"📝 Комментарий: {data.get('comment', '—')}"
     )
 
+async def hunting_base_format_registration_text(state) -> str:
+    data = await state.get_data()
+
+    services = data.get("services", [])
+    services_text = "\n".join(f"• {s}" for s in services) if services else "—"
+
+    return (
+        "✅ Регистрация базы / охотхозяйства завершена\n\n"
+        f"🏕 Название: {data.get('name')}\n"
+        f"📍 Регион: {data.get('region')}\n"
+        f"🧰 Виды услуг:\n{services_text}\n"
+        f"👤 Контактное лицо: {data.get('contact_person')}\n"
+        f"📞 Контакт: {data.get('contact')}\n"
+        f"🌐 Сайт / соцсети: {data.get('website', '—')}"
+    )
+
+
 def get_format_services_selected(selected: list[str] | set[str]) -> str:
     """Форматирует сообщение о количестве выбранных услуг."""
     if not selected:
@@ -79,3 +97,14 @@ async def get_services_selected(state, key):
         selected.add(key)
 
     return selected
+
+async def format_comment_text(state: FSMContext, tg_id) -> str:
+    """
+    Формирует сообщение с данными пользователя и его комментарием.
+    """
+    data = await state.get_data()
+    name = data.get("full_name", "—")
+    phone_number = data.get('phone_number', "—")
+    comment = data.get('comment', "—")
+
+    return f"👤 Имя: {name}\n📞 Номер телефона: {phone_number}\n🆔 TG ID: {tg_id}\n📝 Зарегистрировался и оставил комментарий:\n{comment}"

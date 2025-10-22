@@ -4,19 +4,19 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from core.FSM.registration_fsms import HunterRegistrationFSM
 from core.db.postgres import AsyncSessionLocal
-from core.db_requests.postgres_requests import get_hunter_by_tg_id
+from core.db_requests.postgres_requests import get_hunter_by_tg_id, create_hunter_from_state
 from core.decorators.register_decorators import check_user_registration
 from core.handlers.main_menu_handlers import main_menu_handler, main_menu_callback_query_handler
 from core.keyboards.reply.registration.general_keyboards import home_buttons_keyboard, get_buttons_list_keyboard, \
     confirm_register_keyboard, phone_number_register_keyboard
+from core.logging_config import logger
 from core.services.question_form_service import QuestionsFormService
 from core.settings import settings
 from core.texts import callback_texts, message_texts
 from core.texts import button_texts
 from core.texts.special_names import hunter
 from core.utils.utils import is_phone_number, is_valid_email, is_valid_period, send_text_to_group, \
-    hunter_format_registration_text
-
+    hunter_format_registration_text, format_comment_text
 
 router = Router()
 
@@ -24,11 +24,11 @@ router = Router()
 @router.callback_query(F.data == callback_texts.profile_hunter_register)
 @check_user_registration(filter_user_role=hunter)
 async def hunter_registration_handler(callback: CallbackQuery, state: FSMContext):
-    await callback.answer()
     async with AsyncSessionLocal() as session:
         if await get_hunter_by_tg_id(session, callback.from_user.id):
-            await main_menu_callback_query_handler(callback)
+            await callback.answer(message_texts.user_already_registered)
             return
+    await callback.answer()
 
     await callback.message.answer(message_texts.start_hunter_registration, reply_markup=ReplyKeyboardRemove())
 
@@ -183,10 +183,12 @@ async def hunter_comment_process_handler(message: Message, state: FSMContext):
         await QuestionsFormService.skip(state, HunterRegistrationFSM.confirm, answer)
     else:
         text = message.text[:4096]
+
         await state.update_data(comment=text)
+        format_text = await format_comment_text(state, message.from_user.id)
         answer = message.answer(await hunter_format_registration_text(state),
                                 reply_markup=confirm_register_keyboard())
-        await send_text_to_group(message.bot, settings.bots.request_group_id, text)
+        await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
         await QuestionsFormService.next(state, HunterRegistrationFSM.confirm, answer)
 
 
@@ -199,5 +201,17 @@ async def confirm_application_handler(message: Message, state: FSMContext):
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
     elif message.text == button_texts.confirm_register_btn:
-        await state.clear()  # Сбрасываем состояние после подтверждения
+        await state.update_data(tg_id=message.from_user.id)
+
+        async with AsyncSessionLocal() as session:
+            try:
+                await create_hunter_from_state(state, session)  # Сохраняет в бд
+                await message.answer(message_texts.successful_registration)
+            except Exception as e:
+                await session.rollback()
+                logger.error(f'error: {e}')
+                await message.answer(message_texts.error_registration)
+
+
+        await state.clear()  # Сбрасывает состояние после подтверждения
         await main_menu_handler(message)

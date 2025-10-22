@@ -22,10 +22,14 @@ async def main_menu_handler(message: Message, user_role=None):
 
 @router.callback_query(F.data == callback_texts.main_menu, PrivateChatFilter([private]))
 @check_user_registration(get_user_role=True)
-async def main_menu_callback_query_handler(callback: CallbackQuery, user_role=None):
-    await callback.message.answer(text=message_texts.main_menu_clean, reply_markup=ReplyKeyboardRemove())
-
+async def main_menu_callback_query_handler(callback: CallbackQuery, user_role=None, answer_menu=False):
     keyboard = get_keyboard_by_user_role(user_role)
+    text = message_texts.main_menu_answer
+    reply_markup = keyboard
 
-    await callback.message.answer(text=message_texts.main_menu_answer, reply_markup=keyboard())
+    if not answer_menu:
+        await callback.message.edit_text(text=text, reply_markup=reply_markup())
+    else:
+        await callback.message.answer(text=text, reply_markup=reply_markup())
+
     await callback.answer()

@@ -14,7 +14,7 @@ async def hunter_role_select_callback_query_handler(callback: CallbackQuery):
     await redis_client.set(f"user:{tg_id}", hunter, ex=60 * 60 * 24 * 2)
     await callback.message.answer(message_texts.hunter_role_about)
 
-    await main_menu_callback_query_handler(callback)
+    await main_menu_callback_query_handler(callback, answer_menu=True)
 
 
 @router.callback_query(F.data == callback_texts.hunting_base_role_select)
@@ -23,5 +23,5 @@ async def hunting_base_role_select_callback_query_handler(callback: CallbackQuer
     await redis_client.set(f"user:{tg_id}", hunting_base, ex=60 * 60 * 24 * 2)
     await callback.message.answer(message_texts.hunting_role_role_about)
 
-    await main_menu_callback_query_handler(callback)
+    await main_menu_callback_query_handler(callback, answer_menu=True)
 
