@@ -99,13 +99,15 @@ async def get_services_selected(state, key):
 
     return selected
 
-async def format_comment_text(state: FSMContext, tg_id) -> str:
+async def format_comment_text(state: FSMContext, tg_id):
     """
     Формирует сообщение с данными пользователя и его комментарием.
     """
     data = await state.get_data()
     name = data.get("full_name", "—")
     phone_number = data.get('phone_number', "—")
-    comment = data.get('comment', "—")
+    comment = data.get('comment')
+
+    if not comment: return
 
     return f"👤 Имя: {name}\n📞 Номер телефона: {phone_number}\n🆔 TG ID: {tg_id}\n📝 Зарегистрировался и оставил комментарий:\n{comment}"

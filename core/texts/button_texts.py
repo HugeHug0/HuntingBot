@@ -12,6 +12,8 @@ hunt_group_answers = 'Уведомления о заявке'
 hunt_group_join = 'Присоединиться'
 request_confirmed = '✅ Подтверждено'
 
+wh_tg_channel_subscribe = 'Подписаться на канал'
+wh_media_content = 'Медиа'
 
 confirm_btn = "✅ Подтвердить"
 # ============== reply кнопки ===============

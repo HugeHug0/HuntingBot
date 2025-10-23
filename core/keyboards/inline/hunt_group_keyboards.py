@@ -28,3 +28,9 @@ def hunt_group_confirm_request_keyboard():
                                      callback_data=callback_texts.confirm_request)]]
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyboard
+
+def hunt_group_answers_keyboard():
+    buttons = [[InlineKeyboardButton(text=button_texts.step_back_btn,
+                                     callback_data=callback_texts.hunting_request)]]
+    return main_menu_inline_keyboard(buttons)
+

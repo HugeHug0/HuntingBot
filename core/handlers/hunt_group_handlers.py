@@ -9,7 +9,7 @@ from core.filters.chat_type_filters import PrivateChatFilter, private
 from core.handlers.main_menu_handlers import main_menu_callback_query_handler
 from core.keyboards.inline.general_keyboards import main_menu_inline_keyboard
 from core.keyboards.inline.hunt_group_keyboards import hunt_group_link_inline_keyboard, \
-    hunt_group_request_inline_keyboard
+    hunt_group_request_inline_keyboard, hunt_group_answers_keyboard
 from core.logging_config import logger
 from core.settings import settings
 from core.texts import callback_texts, message_texts, button_texts
@@ -78,11 +78,12 @@ async def hunt_group_answers_callback_query_handler(callback: CallbackQuery):
     admin_messages = await get_admin_messages_for_hunter(tg_id)
 
     if not admin_messages:
-        await callback.message.edit_text(message_texts.no_new_messages, reply_markup=main_menu_inline_keyboard())
+        await callback.message.edit_text(message_texts.no_new_messages, reply_markup=hunt_group_answers_keyboard())
         await callback.answer()
         return
 
     message = '\n\n'.join(admin_messages)
 
-    await callback.message.edit_text(message, reply_markup=main_menu_inline_keyboard())
+    await callback.message.edit_text(message, reply_markup=hunt_group_answers_keyboard())
     await callback.answer()
+
