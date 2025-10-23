@@ -157,14 +157,16 @@ async def get_hunt_group_link_or_none(tg_id: int) -> str | None:
         return result.scalar_one_or_none()
 
 async def is_request_can_send(tg_id: int) -> bool:
-    """Можно ли отправить заявку: есть охотник, но нет заявки."""
     async with AsyncSessionLocal() as session:
         result = await session.execute(
-            select(Hunter.id)
-            .outerjoin(Request, Request.hunter_id == Hunter.id)
-            .where(Hunter.tg_id == tg_id, Request.id.is_(None))
+            select(Hunter)
+            .where(Hunter.tg_id == tg_id)
+            .options(selectinload(Hunter.request))
         )
-        return result.scalar_one_or_none() is not None
+        hunter_obj = result.scalar_one_or_none()
+        if not hunter_obj:
+            return False
+        return hunter_obj.request is None
 
 
 async def get_hunter_with_request(session, tg_id: int) -> Hunter | None:
@@ -237,22 +239,22 @@ async def get_request_object_with_hunter_by_msg_id(session, msg_id: int):
     )
     return result.scalar_one_or_none()
 
-async def hunt_group_update_link_and_get_hunter_tg_id(msg_id, new_forum_link):
+async def hunt_group_update_link_and_get_hunter_tg_id(msg_id, new_hunt_group_link):
     async with AsyncSessionLocal() as session:
         request_obj = await get_request_object_with_hunter_by_msg_id(session, msg_id)
 
-        await update_request_group_link(request_obj, new_forum_link)
-
         if not request_obj:
             return False
+
+        await update_request_group_link(request_obj, new_hunt_group_link)
 
         session.add(request_obj)
         await session.commit()
         return request_obj.hunter.tg_id
 
-async def update_request_group_link(request_obj, new_forum_link):
+async def update_request_group_link(request_obj, new_hunt_group_link):
     if request_obj:
-        request_obj.forum_link = new_forum_link
+        request_obj.hunting_link = new_hunt_group_link
 
 async def get_admin_messages_for_hunter(tg_id: int) -> list[str]:
     """Возвращает список текстов ответов админов по tg_id охотника."""
@@ -271,15 +273,10 @@ async def get_admin_messages_for_hunter(tg_id: int) -> list[str]:
 
         return [msg.message_text for msg in hunter_obj.request.admin_messages]
 
-async def get_request_object(session, msg_id: int):
-    result = await session.execute(
-        select(Request).where(Request.tg_message_id == msg_id)
-    )
-    return result.scalar_one_or_none()
 
 async def get_tg_id_by_msg_id_from_request(msg_id):
     async with AsyncSessionLocal() as session:
-        request_obj = await get_request_object(session, msg_id)
+        request_obj = await get_request_object_with_hunter_by_msg_id(session, msg_id)
         if request_obj:
             return request_obj.hunter.tg_id
 

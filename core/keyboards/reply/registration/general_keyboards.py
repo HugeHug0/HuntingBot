@@ -42,7 +42,7 @@ def get_buttons_list_keyboard(buttons, skip=False):
     return kb
 
 def confirm_register_keyboard():
-    buttons = [[KeyboardButton(text=button_texts.confirm_register_btn)]]
+    buttons = [[KeyboardButton(text=button_texts.confirm_btn)]]
     keyboard = home_buttons_keyboard(back=True, back_home=True, extend_buttons=buttons)
     return keyboard
 

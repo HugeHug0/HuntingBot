@@ -125,7 +125,7 @@ async def hunter_region_process_handler(message: Message, state: FSMContext):
         await main_menu_handler(message)
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
-    elif message.text in button_texts.regions_list:
+    else:
         await state.update_data(region=message.text)  # Сохраняем выбранную услугу и переходим к следующему шагу
         await QuestionsFormService.next(state, HunterRegistrationFSM.hunting_type, answer)
 
@@ -142,7 +142,7 @@ async def hunter_hunting_type_process_handler(message: Message, state: FSMContex
         await main_menu_handler(message)
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
-    elif message.text in button_texts.hunting_types_list:
+    else:
         await state.update_data(hunting_type=message.text)  # Сохраняем выбранную услугу и переходим к следующему шагу
         await QuestionsFormService.next(state, HunterRegistrationFSM.hunting_date, answer)
 
@@ -186,11 +186,11 @@ async def hunter_comment_process_handler(message: Message, state: FSMContext):
         text = message.text[:4096]
 
         await state.update_data(comment=text)
-        format_text = await format_comment_text(state, message.from_user.id)
+
         answer = message.answer(await hunter_format_registration_text(state),
                                 reply_markup=confirm_register_keyboard())
-        await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
         await QuestionsFormService.next(state, HunterRegistrationFSM.confirm, answer)
+
 
 
 # === Подтверждение заявки ===
@@ -208,6 +208,8 @@ async def confirm_application_handler(message: Message, state: FSMContext):
             try:
                 await create_hunter_from_state(state, session)  # Сохраняет в бд
                 await message.answer(message_texts.successful_registration)
+                format_text = await format_comment_text(state, message.from_user.id)
+                await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
             except Exception as e:
                 await session.rollback()
                 logger.error(f'error: {e}')

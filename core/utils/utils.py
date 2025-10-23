@@ -40,6 +40,7 @@ def is_valid_period(period: str) -> bool:
         return False
 
 async def send_text_to_group(bot: Bot, chat_id: int | str, text: str):
+    if not text: return
     try:
         await bot.send_message(chat_id=chat_id, text=text)
         return True

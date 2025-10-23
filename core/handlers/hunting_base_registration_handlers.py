@@ -73,7 +73,7 @@ async def hunting_base_region_process_handler(message: Message, state: FSMContex
         await state.update_data(region=message.text)
         answer = message.answer(
             message_texts.hunting_base_registration_services,
-            reply_markup=get_buttons_list_keyboard(button_texts.hunting_types_list, skip=True)
+            reply_markup=get_buttons_list_keyboard(button_texts.hunting_base_services, skip=True)
         )
         await QuestionsFormService.next(state, HuntingBaseRegistrationFSM.services, answer)
 
@@ -97,7 +97,7 @@ async def hunting_base_services_process_handler(message: Message, state: FSMCont
             await QuestionsFormService.next(state, HuntingBaseRegistrationFSM.contact_person, answer)
         else:
             await message.answer(message_texts.no_services_selected)
-    elif message.text in button_texts.hunting_types_list:
+    else:
         key = message.text
         selected = await get_services_selected(state, key)
 
