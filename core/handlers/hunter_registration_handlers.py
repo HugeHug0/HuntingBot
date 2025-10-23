@@ -6,7 +6,8 @@ from core.FSM.registration_fsms import HunterRegistrationFSM
 from core.db.postgres import AsyncSessionLocal
 from core.db_requests.postgres_requests import get_hunter_by_tg_id, create_hunter_from_state
 from core.decorators.register_decorators import check_user_registration
-from core.handlers.main_menu_handlers import main_menu_handler, main_menu_callback_query_handler
+from core.filters.chat_type_filters import PrivateChatFilter, private
+from core.handlers.main_menu_handlers import main_menu_handler
 from core.keyboards.reply.registration.general_keyboards import home_buttons_keyboard, get_buttons_list_keyboard, \
     confirm_register_keyboard, phone_number_register_keyboard
 from core.logging_config import logger
@@ -21,7 +22,7 @@ from core.utils.utils import is_phone_number, is_valid_email, is_valid_period, s
 router = Router()
 
 
-@router.callback_query(F.data == callback_texts.profile_hunter_register)
+@router.callback_query(F.data == callback_texts.profile_hunter_register, PrivateChatFilter([private]))
 @check_user_registration(filter_user_role=hunter)
 async def hunter_registration_handler(callback: CallbackQuery, state: FSMContext):
     async with AsyncSessionLocal() as session:
@@ -200,7 +201,7 @@ async def confirm_application_handler(message: Message, state: FSMContext):
         await main_menu_handler(message)
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
-    elif message.text == button_texts.confirm_register_btn:
+    elif message.text == button_texts.confirm_btn:
         await state.update_data(tg_id=message.from_user.id)
 
         async with AsyncSessionLocal() as session:

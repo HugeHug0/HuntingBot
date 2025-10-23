@@ -6,7 +6,8 @@ from core.FSM.registration_fsms import HuntingBaseRegistrationFSM
 from core.db.postgres import AsyncSessionLocal
 from core.db_requests.postgres_requests import get_hunting_base_by_tg_id, create_hunting_base_from_state
 from core.decorators.register_decorators import check_user_registration
-from core.handlers.main_menu_handlers import main_menu_handler, main_menu_callback_query_handler
+from core.filters.chat_type_filters import PrivateChatFilter, private
+from core.handlers.main_menu_handlers import main_menu_handler
 from core.keyboards.reply.registration.general_keyboards import (
     home_buttons_keyboard, get_buttons_list_keyboard, phone_number_register_keyboard, confirm_register_keyboard)
 from core.logging_config import logger
@@ -17,11 +18,12 @@ from core.texts.special_names import hunting_base
 from core.utils.utils import get_format_services_selected, get_services_selected, \
     is_phone_number, hunting_base_format_registration_text
 
+
 router = Router()
 
 
 # === Старт регистрации базы ===
-@router.callback_query(F.data == callback_texts.profile_hunting_base_register)
+@router.callback_query(F.data == callback_texts.profile_hunting_base_register, PrivateChatFilter([private]))
 @check_user_registration(filter_user_role=hunting_base)
 async def hunting_base_registration_handler(callback: CallbackQuery, state: FSMContext):
     async with AsyncSessionLocal() as session:
@@ -192,7 +194,7 @@ async def hunting_base_confirm_process_handler(message: Message, state: FSMConte
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
         return
-    elif message.text == button_texts.confirm_register_btn:
+    elif message.text == button_texts.confirm_btn:
         await state.update_data(tg_id=message.from_user.id)
 
         async with AsyncSessionLocal() as session:

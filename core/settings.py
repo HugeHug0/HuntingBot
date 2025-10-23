@@ -6,7 +6,7 @@ class Bots:  # Класс для хранения данных для бота
     bot_token: str
     request_group_id: int
     admin_ids: list
-    chat_members_link: str
+    hunt_group_id: int
 
 
 @dataclass()
@@ -35,7 +35,7 @@ def get_settings(path: str = None):
     postgres_dsn = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
     request_group_id = env.int('REQUESTS_GROUP_ID')
-    chat_members_link = env.str('CHAT_MEMBERS_LINK')
+    hunt_group_id = env.int('HUNT_GROUP_ID')
     admin_ids = [int(i) for i in env.str('ADMIN_IDS').split(',')]
 
     return Settings(  # Создание dataclass для хранения данных
@@ -43,7 +43,7 @@ def get_settings(path: str = None):
             bot_token=env.str('BOT_TOKEN'),
             request_group_id=request_group_id,
             admin_ids=admin_ids,
-            chat_members_link=chat_members_link
+            hunt_group_id=hunt_group_id
         ),
         postgres_dsn=postgres_dsn,
         redis_host=redis_host,

@@ -1,14 +1,20 @@
 from datetime import datetime
 
+from aiogram.types import CallbackQuery
 from sqlalchemy import select, delete
+from sqlalchemy.orm import selectinload
 
-from core.db.models import Hunter, HuntingBase, Service
+from core.db.models import Hunter, HuntingBase, Service, Request, AdminMessage
 from core.db.postgres import AsyncSessionLocal
 
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, Union
 
+from core.keyboards.inline.hunt_group_keyboards import hunt_group_confirm_request_keyboard
+from core.logging_config import logger
+from core.settings import settings
+from core.texts import message_texts
 from core.texts.special_names import hunter, hunting_base
 
 
@@ -139,3 +145,157 @@ async def _get_or_create_services(names: list[str], session: AsyncSession) -> li
             session.add(service)
         services.append(service)
     return services
+
+async def get_hunt_group_link_or_none(tg_id: int) -> str | None:
+    """Возвращает hunting_link по tg_id охотника, если существует."""
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Request.hunting_link)
+            .join(Hunter)
+            .where(Hunter.tg_id == tg_id)
+        )
+        return result.scalar_one_or_none()
+
+async def is_request_can_send(tg_id: int) -> bool:
+    """Можно ли отправить заявку: есть охотник, но нет заявки."""
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Hunter.id)
+            .outerjoin(Request, Request.hunter_id == Hunter.id)
+            .where(Hunter.tg_id == tg_id, Request.id.is_(None))
+        )
+        return result.scalar_one_or_none() is not None
+
+
+async def get_hunter_with_request(session, tg_id: int) -> Hunter | None:
+    """Возвращает охотника вместе с его заявкой."""
+    result = await session.execute(
+        select(Hunter)
+        .where(Hunter.tg_id == tg_id)
+        .options(selectinload(Hunter.request))
+    )
+    return result.scalar_one_or_none()
+
+
+async def build_request_message(hunter_obj: Hunter) -> str:
+    """Формирует текст заявки для отправки в группу."""
+    return (
+        f"📩 Заявка от охотника\n"
+        f"👤 Имя: {hunter_obj.full_name or '—'}\n"
+        f"📞 Телефон: {hunter_obj.phone or '—'}\n"
+        f"📧 Email: {hunter_obj.email or '—'}\n"
+        f"📍 Регион: {hunter_obj.region or '—'}\n"
+        f"🏹 Тип охоты: {hunter_obj.hunt_type or '—'}\n"
+        f"📅 Период: {hunter_obj.start_date or '—'} — {hunter_obj.end_date or '—'}\n"
+        f"🆔 Telegram ID: {hunter_obj.tg_id}"
+    )
+
+
+async def send_message_to_group(callback: CallbackQuery):
+    """Отправляет заявку охотника в группу Telegram."""
+    tg_id = callback.from_user.id
+
+    async with AsyncSessionLocal() as session:
+        hunter_obj = await get_hunter_with_request(session, tg_id)
+        if not hunter_obj:
+            await callback.answer(message_texts.unregister_hunter)
+            return
+
+        message_text = await build_request_message(hunter_obj)
+
+        try:
+            msg = await callback.bot.send_message(
+                chat_id=settings.bots.request_group_id,
+                text=message_text,
+                reply_markup=hunt_group_confirm_request_keyboard()
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при отправке заявки в группу: {e}")
+            await callback.message.answer(message_texts.invalid_send_to_group)
+            return
+
+        # если заявка уже есть — обновляем сообщение
+        if hunter_obj.request:
+            hunter_obj.request.tg_message_id = msg.message_id
+        else:
+            new_request = Request(
+                hunter_id=hunter_obj.id,
+                tg_message_id=msg.message_id,
+            )
+            session.add(new_request)
+
+        await session.commit()
+        await callback.message.answer(message_texts.successful_send_to_group)
+
+
+async def get_request_object_with_hunter_by_msg_id(session, msg_id: int):
+    """Возвращает Request по tg_message_id вместе с охотником."""
+    result = await session.execute(
+        select(Request)
+        .options(selectinload(Request.hunter))
+        .where(Request.tg_message_id == msg_id)
+    )
+    return result.scalar_one_or_none()
+
+async def hunt_group_update_link_and_get_hunter_tg_id(msg_id, new_forum_link):
+    async with AsyncSessionLocal() as session:
+        request_obj = await get_request_object_with_hunter_by_msg_id(session, msg_id)
+
+        await update_request_group_link(request_obj, new_forum_link)
+
+        if not request_obj:
+            return False
+
+        session.add(request_obj)
+        await session.commit()
+        return request_obj.hunter.tg_id
+
+async def update_request_group_link(request_obj, new_forum_link):
+    if request_obj:
+        request_obj.forum_link = new_forum_link
+
+async def get_admin_messages_for_hunter(tg_id: int) -> list[str]:
+    """Возвращает список текстов ответов админов по tg_id охотника."""
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Hunter)
+            .where(Hunter.tg_id == tg_id)
+            .options(
+                selectinload(Hunter.request).selectinload(Request.admin_messages)
+            )
+        )
+        hunter_obj = result.scalar_one_or_none()
+
+        if not hunter_obj or not hunter_obj.request:
+            return []
+
+        return [msg.message_text for msg in hunter_obj.request.admin_messages]
+
+async def get_request_object(session, msg_id: int):
+    result = await session.execute(
+        select(Request).where(Request.tg_message_id == msg_id)
+    )
+    return result.scalar_one_or_none()
+
+async def get_tg_id_by_msg_id_from_request(msg_id):
+    async with AsyncSessionLocal() as session:
+        request_obj = await get_request_object(session, msg_id)
+        if request_obj:
+            return request_obj.hunter.tg_id
+
+async def save_admin_message_for_request(replied_msg_id, text):
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Request).where(Request.tg_message_id == replied_msg_id)
+        )
+        request_obj = result.scalar_one_or_none()
+        if not request_obj:
+            return  # заявка не найдена
+
+        admin_response = AdminMessage(
+            request_id=request_obj.id,
+            message_text=text
+        )
+        session.add(admin_response)
+        await session.commit()
+

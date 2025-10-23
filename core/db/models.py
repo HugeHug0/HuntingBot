@@ -17,6 +17,30 @@ class Hunter(Base):
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
 
+    request = relationship("Request", back_populates="hunter", uselist=False)
+
+
+class Request(Base):
+    __tablename__ = "requests"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    hunter_id = Column(BigInteger, ForeignKey("hunters.id", ondelete="CASCADE"), unique=True)
+    tg_message_id = Column(BigInteger, nullable=True)
+    hunting_link = Column(String, unique=True)
+
+    hunter = relationship("Hunter", back_populates="request")
+    admin_messages = relationship("AdminMessage", back_populates="request")
+
+
+class AdminMessage(Base):
+    __tablename__ = "admin_messages"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    request_id = Column(BigInteger, ForeignKey("requests.id", ondelete="CASCADE"))
+    message_text = Column(Text, nullable=False)
+
+    request = relationship("Request", back_populates="admin_messages")
+
 
 # промежуточная таблица
 base_service = Table(

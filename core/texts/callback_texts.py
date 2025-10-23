@@ -7,3 +7,7 @@ hunter_role_select = 'hunter_role'
 hunting_base_role_select = 'hunting_base_role'
 main_menu = 'main_menu'
 log_out = 'log_out'
+
+hunt_group_request = 'hunt_group_request'
+hunt_group_answers = 'hunt_group_answers'
+confirm_request = 'confirm_request'
