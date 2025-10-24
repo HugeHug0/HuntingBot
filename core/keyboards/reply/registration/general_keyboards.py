@@ -31,7 +31,7 @@ def home_buttons_keyboard(skip=False, back=False, back_home=False, extend_button
 def get_buttons_list_keyboard(buttons, skip=False):
     builder = ReplyKeyboardBuilder()
     if skip:
-        builder.row(KeyboardButton(text=button_texts.next_btn))
+        builder.row(KeyboardButton(text=button_texts.next_btn), width=3)
     builder.add(*[KeyboardButton(text=button) for button in buttons])
     builder.adjust(3)
 

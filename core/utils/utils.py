@@ -82,10 +82,10 @@ async def hunting_base_format_registration_text(state) -> str:
 def get_format_services_selected(selected: list[str] | set[str]) -> str:
     """Форматирует сообщение о количестве выбранных услуг."""
     if not selected:
-        return "❌ Услуги не выбраны."
+        return "❌ Ничего не выбрано."
 
     selected = list(selected)
-    return f"✅ Выбрано услуг: {len(selected)}\n" + "\n".join(f"• {s}" for s in selected)
+    return f"✅ Выбрано: {len(selected)}\n" + "\n".join(f"• {s}" for s in selected)
 
 async def get_services_selected(state, key):
     data = await state.get_data()
@@ -110,3 +110,24 @@ async def format_comment_text(state: FSMContext, tg_id):
     if not comment: return
 
     return f"👤 Имя: {name}\n📞 Номер телефона: {phone_number}\n🆔 TG ID: {tg_id}\n📝 Зарегистрировался и оставил комментарий:\n{comment}"
+
+async def get_hunting_base_register_text(state: FSMContext, tg_id):
+    data = await state.get_data()
+
+    name = data.get("name", "—")
+    region = data.get("region", "—")
+    services = ", ".join(data.get("services", [])) or "—"
+    contact_person = data.get("contact_person", "—")
+    contact = data.get("contact", "—")
+    website = data.get("website", "—")
+
+    return (
+        f"🏕 <b>Регистрация охотхозяйства</b>\n\n"
+        f"📍 Регион: {region}\n"
+        f"🏞 Название: {name}\n"
+        f"🧑‍💼 Контактное лицо: {contact_person}\n"
+        f"📞 Контакты: {contact}\n"
+        f"🌐 Сайт: {website}\n"
+        f"🎯 Услуги: {services}\n\n"
+        f"🆔 TG ID: <code>{tg_id}</code>"
+    )

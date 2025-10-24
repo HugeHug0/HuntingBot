@@ -16,7 +16,7 @@ from core.settings import settings
 from core.texts import callback_texts, message_texts
 from core.texts import button_texts
 from core.texts.special_names import hunter
-from core.utils.utils import is_phone_number, is_valid_email, is_valid_period, send_text_to_group, \
+from core.utils.utils import is_phone_number, is_valid_email, send_text_to_group, \
     hunter_format_registration_text, format_comment_text
 
 router = Router()

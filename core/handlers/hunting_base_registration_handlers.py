@@ -13,11 +13,11 @@ from core.keyboards.reply.registration.general_keyboards import (
 from core.logging_config import logger
 
 from core.services.question_form_service import QuestionsFormService
+from core.settings import settings
 from core.texts import callback_texts, message_texts, button_texts
 from core.texts.special_names import hunting_base
 from core.utils.utils import get_format_services_selected, get_services_selected, \
-    is_phone_number, hunting_base_format_registration_text
-
+    is_phone_number, hunting_base_format_registration_text, send_text_to_group, get_hunting_base_register_text
 
 router = Router()
 
@@ -215,6 +215,8 @@ async def hunting_base_confirm_process_handler(message: Message, state: FSMConte
             try:
                 await create_hunting_base_from_state(state, session)  # Сохраняет в бд
                 await message.answer(message_texts.successful_registration)
+                format_text = await get_hunting_base_register_text(state, message.from_user.id)
+                await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
             except Exception as e:
                 await session.rollback()
                 logger.error(f'error: {e}')
