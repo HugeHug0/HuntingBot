@@ -30,16 +30,20 @@ def home_buttons_keyboard(skip=False, back=False, back_home=False, extend_button
 
 def get_buttons_list_keyboard(buttons, skip=False):
     builder = ReplyKeyboardBuilder()
+
     if skip:
-        builder.row(KeyboardButton(text=button_texts.next_btn), width=3)
-    builder.add(*[KeyboardButton(text=button) for button in buttons])
-    builder.adjust(3)
+        builder.row(KeyboardButton(text=button_texts.next_btn))  # своя строка
 
-    builder.row(KeyboardButton(text=button_texts.step_back_btn),
-                KeyboardButton(text=button_texts.home_btn))
+    # Разбивает по 3 в ряд
+    for i in range(0, len(buttons), 3):
+        builder.row(*[KeyboardButton(text=b) for b in buttons[i:i + 3]])
 
-    kb = builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
-    return kb
+    builder.row(
+        KeyboardButton(text=button_texts.step_back_btn),
+        KeyboardButton(text=button_texts.home_btn)
+    )
+
+    return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
 def confirm_register_keyboard():
     buttons = [[KeyboardButton(text=button_texts.confirm_btn)]]

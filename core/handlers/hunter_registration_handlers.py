@@ -17,7 +17,7 @@ from core.texts import callback_texts, message_texts
 from core.texts import button_texts
 from core.texts.special_names import hunter
 from core.utils.utils import is_phone_number, is_valid_email, send_text_to_group, \
-    hunter_format_registration_text, format_comment_text
+    hunter_format_registration_text, format_hunter_register_text
 
 router = Router()
 
@@ -209,7 +209,7 @@ async def confirm_application_handler(message: Message, state: FSMContext):
             try:
                 await create_hunter_from_state(state, session)  # Сохраняет в бд
                 await message.answer(message_texts.successful_registration)
-                format_text = await format_comment_text(state, message.from_user.id)
+                format_text = await format_hunter_register_text(state, message.from_user.id)
                 await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
             except Exception as e:
                 await session.rollback()

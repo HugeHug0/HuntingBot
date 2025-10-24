@@ -17,6 +17,10 @@ wh_media_content = '🎥 Медиа'
 wh_media_vk = '📼 VK видео'
 wh_media_youtube = '🎬 YouTube видео'
 
+agree_to_processing_data = '✅ Я согласен (-на)'
+dont_agree_processing_data = '❌ Я не согласен (-на)'
+personal_data_about = '🔍 Ознакомиться'
+
 confirm_btn = "✅ Подтвердить"
 # ============== reply кнопки ===============
 skip_btn = "➡️ Пропустить"

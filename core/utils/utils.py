@@ -42,7 +42,7 @@ def is_valid_period(period: str) -> bool:
 async def send_text_to_group(bot: Bot, chat_id: int | str, text: str):
     if not text: return
     try:
-        await bot.send_message(chat_id=chat_id, text=text)
+        await bot.send_message(chat_id=chat_id, text=text, parse_mode='HTML')
         return True
     except TelegramAPIError as e:
         print(f"Ошибка Telegram API: {e}")
@@ -98,18 +98,33 @@ async def get_services_selected(state, key):
 
     return selected
 
-async def format_comment_text(state: FSMContext, tg_id):
+async def format_hunter_register_text(state: FSMContext, tg_id: int):
     """
-    Формирует сообщение с данными пользователя и его комментарием.
+    Формирует сообщение с данными зарегистрировавшегося охотника.
     """
     data = await state.get_data()
-    name = data.get("full_name", "—")
-    phone_number = data.get('phone_number', "—")
-    comment = data.get('comment')
 
-    if not comment: return
+    full_name = data.get("full_name", "—")
+    phone = data.get("phone_number", "—")
+    email = data.get("email", "—")
+    region = data.get("region", "—")
+    hunt_type = data.get("hunting_type", "—")
+    comment = data.get("comment")
 
-    return f"👤 Имя: {name}\n📞 Номер телефона: {phone_number}\n🆔 TG ID: {tg_id}\n📝 Зарегистрировался и оставил комментарий:\n{comment}"
+    text = (
+        f"🏹 <b>Еще один охотник!</b>\n\n"
+        f"👤 Имя: {full_name}\n"
+        f"📞 Телефон: {phone}\n"
+        f"📧 Email: {email}\n"
+        f"📍 Регион: {region}\n"
+        f"🎯 Тип охоты: {hunt_type}\n\n"
+        f"🆔 TG ID: <code>{tg_id}</code>"
+    )
+
+    if comment:
+        text += f"\n\n💬 Комментарий:\n{comment}"
+
+    return text
 
 async def get_hunting_base_register_text(state: FSMContext, tg_id):
     data = await state.get_data()
@@ -122,7 +137,7 @@ async def get_hunting_base_register_text(state: FSMContext, tg_id):
     website = data.get("website", "—")
 
     return (
-        f"🏕 <b>Регистрация охотхозяйства</b>\n\n"
+        f"🏕 <b>Еще одно охотхозяйство!</b>\n\n"
         f"📍 Регион: {region}\n"
         f"🏞 Название: {name}\n"
         f"🧑‍💼 Контактное лицо: {contact_person}\n"
