@@ -7,7 +7,6 @@ class HunterRegistrationFSM(StatesGroup):
     email = State()
     region = State()
     hunting_type = State()
-    hunting_date = State()
     comment = State()
     confirm = State()
 

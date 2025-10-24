@@ -69,7 +69,7 @@ async def hunting_base_region_process_handler(message: Message, state: FSMContex
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
         return
-    elif message.text in button_texts.regions_list:
+    else:
         await state.update_data(region=message.text)
         answer = message.answer(
             message_texts.hunting_base_registration_services,
@@ -85,10 +85,19 @@ async def hunting_base_services_process_handler(message: Message, state: FSMCont
         message_texts.hunting_base_registration_contact_person,
         reply_markup=home_buttons_keyboard(back_home=True, back=True)
     )
+    reset_answer = message.answer(
+            message_texts.hunting_base_registration_services,
+            reply_markup=get_buttons_list_keyboard(button_texts.hunting_base_services, skip=True)
+        )
+
     if message.text == button_texts.home_btn:
         await state.clear()
         await main_menu_handler(message)
     elif message.text == button_texts.step_back_btn:
+        data = await state.get_data()
+        data.pop("services", None)
+        await state.set_data(data)
+
         await QuestionsFormService.back(state)
     elif message.text == button_texts.next_btn:
         data = await state.get_data()
@@ -97,12 +106,17 @@ async def hunting_base_services_process_handler(message: Message, state: FSMCont
             await QuestionsFormService.next(state, HuntingBaseRegistrationFSM.contact_person, answer)
         else:
             await message.answer(message_texts.no_services_selected)
-    else:
+            await reset_answer
+    elif message.text in button_texts.hunting_base_services:
+        await reset_answer
+
         key = message.text
         selected = await get_services_selected(state, key)
 
         await state.update_data(services=list(selected))
         await message.answer(get_format_services_selected(selected))
+    else:
+        await reset_answer
 
 
 # === contact person ===
@@ -155,7 +169,7 @@ async def hunting_base_phone_number_process_handler(message: Message, state: FSM
             await QuestionsFormService.next(state, HuntingBaseRegistrationFSM.website, answer)
         else:
             # Введён некорректный номер
-            await message.answer(message_texts.invalid_phone_number)
+            await message.answer(message_texts.invalid_phone_number, reply_markup=phone_number_register_keyboard())
 
 
 # === Сайт / соцсети ===
@@ -208,3 +222,6 @@ async def hunting_base_confirm_process_handler(message: Message, state: FSMConte
 
         await state.clear()
         await main_menu_handler(message)
+    else:
+        await message.answer(message_texts.your_buttons,
+                             reply_markup=confirm_register_keyboard())

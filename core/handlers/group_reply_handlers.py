@@ -25,7 +25,7 @@ async def admin_reply_handler(message: Message):
     text = message_texts.admin_reply_on_request_new_message
 
     if tg_id is None:
-        logger.error("chat_id равен None, сообщение не будет отправлено")
+        logger.error("tg_id равен None, сообщение не будет отправлено")
         return
 
     try:

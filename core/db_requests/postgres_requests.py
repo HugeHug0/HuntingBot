@@ -72,36 +72,33 @@ async def create_hunter_from_state(state, session: AsyncSession) -> Hunter:
 
 def _parse_state_data(data: dict) -> dict:
     """Подготавливает данные из FSM state к сохранению."""
-    start_date, end_date = _parse_date_period(data.get("hunting_date"))
 
     return {
         "tg_id": data["tg_id"],
         "full_name": data["full_name"],
         "phone": data["phone_number"],
-        "email": data.get("email"),  # может отсутствовать
+        "email": data.get("email"),
         "region": data["region"],
         "hunt_type": data["hunting_type"],
-        "start_date": start_date,
-        "end_date": end_date,
     }
 
 
-def _parse_date_period(period_str: str | None):
-    """Парсит строку 'yyyy-mm-dd yyyy-mm-dd' → (start_date, end_date)."""
-    if not period_str:
-        return None, None
-    parts = period_str.strip().split()
-    if len(parts) != 2:
-        return None, None
-    start, end = parts
-    return _to_date(start), _to_date(end)
+# def _parse_date_period(period_str: str | None):
+#     """Парсит строку 'yyyy-mm-dd yyyy-mm-dd' → (start_date, end_date)."""
+#     if not period_str:
+#         return None, None
+#     parts = period_str.strip().split()
+#     if len(parts) != 2:
+#         return None, None
+#     start, end = parts
+#     return _to_date(start), _to_date(end)
 
 
-def _to_date(date_str: str | None):
-    """Преобразует текстовую дату в datetime.date."""
-    if not date_str:
-        return None
-    return datetime.strptime(date_str, "%Y-%m-%d").date()
+# def _to_date(date_str: str | None):
+#     """Преобразует текстовую дату в datetime.date."""
+#     if not date_str:
+#         return None
+#     return datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
 def _build_hunter(data: dict) -> Hunter:
@@ -188,7 +185,6 @@ async def build_request_message(hunter_obj: Hunter) -> str:
         f"📧 Email: {hunter_obj.email or '—'}\n"
         f"📍 Регион: {hunter_obj.region or '—'}\n"
         f"🏹 Тип охоты: {hunter_obj.hunt_type or '—'}\n"
-        f"📅 Период: {hunter_obj.start_date or '—'} — {hunter_obj.end_date or '—'}\n"
         f"🆔 Telegram ID: {hunter_obj.tg_id}"
     )
 

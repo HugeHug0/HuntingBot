@@ -62,7 +62,7 @@ async def hunter_name_proces_handler(message: Message, state: FSMContext):
 async def hunter_contact_phone_number_process_handler(message: Message, state: FSMContext):
     # Ответ для шага ввода email
     answer = message.answer(message_texts.hunter_registration_email,
-                            reply_markup=home_buttons_keyboard(skip=True, back=True, back_home=True))
+                            reply_markup=home_buttons_keyboard(back=True, back_home=True))
 
     # Получаем номер телефона и сохраняем
     phone_number = message.contact.phone_number
@@ -83,11 +83,11 @@ async def hunter_phone_number_process_handler(message: Message, state: FSMContex
         if is_phone_number(phone_number):
             await state.update_data(phone_number=phone_number)
             answer = message.answer(message_texts.hunter_registration_email,
-                            reply_markup=home_buttons_keyboard(skip=True, back=True, back_home=True))
+                            reply_markup=home_buttons_keyboard(back=True, back_home=True))
             await QuestionsFormService.next(state, HunterRegistrationFSM.email, answer)
         else:
             # Введён некорректный номер
-            await message.answer(message_texts.invalid_phone_number)
+            await message.answer(message_texts.invalid_phone_number,reply_markup=phone_number_register_keyboard())
 
 
 # === Обработка email ===
@@ -102,15 +102,13 @@ async def hunter_email_process_handler(message: Message, state: FSMContext):
         await main_menu_handler(message)
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
-    elif message.text == button_texts.skip_btn:
-        await QuestionsFormService.skip(state, HunterRegistrationFSM.region, answer)
     else:
         email = message.text
         if is_valid_email(email):
             await state.update_data(email=email)
             await QuestionsFormService.next(state, HunterRegistrationFSM.region, answer)
         else:
-            await message.answer(message_texts.invalid_email)
+            await message.answer(message_texts.invalid_email, reply_markup=home_buttons_keyboard(back=True, back_home=True))
 
 
 # === Обработка region ===
@@ -133,24 +131,7 @@ async def hunter_region_process_handler(message: Message, state: FSMContext):
 # === Обработка hunt_type ===
 @router.message(HunterRegistrationFSM.hunting_type, F.text)
 async def hunter_hunting_type_process_handler(message: Message, state: FSMContext):
-    # Ответ для шага ввода вида охоты
-    answer = message.answer(message_texts.hunter_registration_hunting_date,
-                            reply_markup=home_buttons_keyboard(back=True, back_home=True))
-
-    if message.text == button_texts.home_btn:
-        await state.clear()
-        await main_menu_handler(message)
-    elif message.text == button_texts.step_back_btn:
-        await QuestionsFormService.back(state)
-    else:
-        await state.update_data(hunting_type=message.text)  # Сохраняем выбранную услугу и переходим к следующему шагу
-        await QuestionsFormService.next(state, HunterRegistrationFSM.hunting_date, answer)
-
-
-# === Обработка hunting_date ===
-@router.message(HunterRegistrationFSM.hunting_date, F.text)
-async def hunter_hunting_date_process_handler(message: Message, state: FSMContext):
-    # Ответ для шага ввода периода
+    # Ответ для шага ввода comment
     answer = message.answer(message_texts.hunter_registration_comment,
                             reply_markup=home_buttons_keyboard(skip=True, back=True, back_home=True))
 
@@ -159,13 +140,33 @@ async def hunter_hunting_date_process_handler(message: Message, state: FSMContex
         await main_menu_handler(message)
     elif message.text == button_texts.step_back_btn:
         await QuestionsFormService.back(state)
+    elif message.text in button_texts.hunting_types_list:
+        await state.update_data(hunting_type=message.text)  # Сохраняем выбранную услугу и переходим к следующему шагу
+        await QuestionsFormService.next(state, HunterRegistrationFSM.comment, answer)
     else:
-        period = message.text
-        if is_valid_period(period):
-            await state.update_data(hunting_date=period)
-            await QuestionsFormService.next(state, HunterRegistrationFSM.comment, answer)
-        else:
-            await message.answer(message_texts.invalid_date)
+        await message.answer(message_texts.your_buttons,
+                            reply_markup=get_buttons_list_keyboard(button_texts.hunting_types_list))
+
+
+# # === Обработка hunting_date ===
+# @router.message(HunterRegistrationFSM.hunting_date, F.text)
+# async def hunter_hunting_date_process_handler(message: Message, state: FSMContext):
+#     # Ответ для шага ввода
+#     answer = message.answer(message_texts.hunter_registration_comment,
+#                             reply_markup=home_buttons_keyboard(skip=True, back=True, back_home=True))
+#
+#     if message.text == button_texts.home_btn:
+#         await state.clear()
+#         await main_menu_handler(message)
+#     elif message.text == button_texts.step_back_btn:
+#         await QuestionsFormService.back(state)
+#     else:
+#         period = message.text
+#         if is_valid_period(period):
+#             await state.update_data(hunting_date=period)
+#             await QuestionsFormService.next(state, HunterRegistrationFSM.comment, answer)
+#         else:
+#             await message.answer(message_texts.invalid_date)
 
 
 # === Обработка комментария ===
@@ -218,3 +219,7 @@ async def confirm_application_handler(message: Message, state: FSMContext):
 
         await state.clear()  # Сбрасывает состояние после подтверждения
         await main_menu_handler(message)
+    else:
+        await message.answer(message_texts.your_buttons,
+                             reply_markup=confirm_register_keyboard())
+

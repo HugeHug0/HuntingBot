@@ -59,7 +59,6 @@ async def hunter_format_registration_text(state) -> str:
         f"📧 E-mail: {data.get('email', '—')}\n"
         f"🌍 Регион охоты: {data.get('region')}\n"
         f"🏹 Вид охоты: {data.get('hunting_type')}\n"
-        f"📅 Период: {' / '.join(data.get('hunting_date').split())}\n"
         f"📝 Комментарий: {data.get('comment', '—')}"
     )
 

@@ -62,8 +62,6 @@ def _format_hunter_all(h, i):
         f"   Email: {h.email or '—'}\n"
         f"   Region: {h.region}\n"
         f"   Hunt type: {h.hunt_type}\n"
-        f"   Start date: {h.start_date}\n"
-        f"   End date: {h.end_date}\n\n"
     )
 
 
