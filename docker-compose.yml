@@ -1,4 +1,17 @@
 services:
+  bot:
+    build: .
+    container_name: hunting_bot
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    command: ["python", "main.py"]
+    volumes:
+      - .:/app
+
   db:
     image: postgres:15
     container_name: hunting_bot_db
@@ -16,11 +29,9 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    # опционально — сохранение данных
     volumes:
       - redisdata_hunting_bot:/data
 
 volumes:
   pgdata_hunting_bot:
   redisdata_hunting_bot:
-
