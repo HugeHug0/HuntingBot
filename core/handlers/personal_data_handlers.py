@@ -9,7 +9,7 @@ router = Router()
 
 
 @router.callback_query(F.data == callback_texts.personal_data)
-@check_user_registration(get_user_role=True, only_registered=True)
+@check_user_registration(get_user_role=True)
 async def personal_data_callback_query_handler(callback: CallbackQuery, user_role=None):
     await callback.message.answer(text=message_texts.personal_data,
                                   reply_markup=get_personal_data_before_registration_keyboard_by_role(user_role))
