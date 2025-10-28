@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from core.FSM.registration_fsms import HunterRegistrationFSM
 from core.db.postgres import AsyncSessionLocal
-from core.db_requests.postgres_requests import get_hunter_by_tg_id, create_hunter_from_state
+from core.db_requests.postgres_requests import create_hunter_from_state
 from core.decorators.register_decorators import check_user_registration
 from core.filters.chat_type_filters import PrivateChatFilter, private
 from core.handlers.main_menu_handlers import main_menu_handler
@@ -23,12 +23,8 @@ router = Router()
 
 
 @router.callback_query(F.data == callback_texts.profile_hunter_register, PrivateChatFilter([private]))
-@check_user_registration(filter_user_role=hunter)
+@check_user_registration(filter_user_role=hunter, only_unregistered=True)
 async def hunter_registration_handler(callback: CallbackQuery, state: FSMContext):
-    async with AsyncSessionLocal() as session:
-        if await get_hunter_by_tg_id(session, callback.from_user.id):
-            await callback.answer(message_texts.user_already_registered)
-            return
     await callback.answer()
 
     await callback.message.answer(message_texts.start_hunter_registration, reply_markup=ReplyKeyboardRemove())

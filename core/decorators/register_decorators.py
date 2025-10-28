@@ -24,7 +24,8 @@ def _get_callback_by_event(event):
 def _get_role(db_obj, cache_obj):
     return db_obj or cache_obj
 
-def check_user_registration(get_user_role=False, filter_user_role=None, only_registered=False):
+def check_user_registration(get_user_role=False, filter_user_role=None, only_registered=False,
+                            only_unregistered=False):
     def decorator(func):
         @wraps(func)
         async def wrapper(event, *args, **kwargs):
@@ -47,6 +48,10 @@ def check_user_registration(get_user_role=False, filter_user_role=None, only_reg
 
             if only_registered and not db_obj:
                 if callback: await callback.answer(message_texts.unregister)
+                return
+
+            if only_unregistered and db_obj:
+                if callback: await callback.answer(message_texts.user_already_registered)
                 return
 
             if filter_user_role and filter_user_role != role:
