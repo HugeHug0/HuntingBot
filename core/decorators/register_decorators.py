@@ -46,16 +46,16 @@ def check_user_registration(get_user_role=False, filter_user_role=None, only_reg
 
             role = _get_role(db_obj, cache_obj)
 
+            if filter_user_role and filter_user_role != role:
+                if callback: await callback.answer(message_texts.wrong_role)
+                return
+
             if only_registered and not db_obj:
                 if callback: await callback.answer(message_texts.unregister)
                 return
 
             if only_unregistered and db_obj:
                 if callback: await callback.answer(message_texts.user_already_registered)
-                return
-
-            if filter_user_role and filter_user_role != role:
-                if callback: await callback.answer(message_texts.wrong_role)
                 return
 
             if get_user_role:
