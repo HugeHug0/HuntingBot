@@ -216,7 +216,7 @@ async def hunting_base_confirm_process_handler(message: Message, state: FSMConte
                 await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
 
                 await message.answer(text=message_texts.hunting_base_successful_registration,
-                                     reply_markup=main_menu_inline_keyboard())
+                                     reply_markup=main_menu_inline_keyboard(answer_menu=True))
             except Exception as e:
                 await session.rollback()
                 logger.error(f'error: {e}')

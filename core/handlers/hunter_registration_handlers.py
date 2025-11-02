@@ -210,7 +210,7 @@ async def confirm_application_handler(message: Message, state: FSMContext):
                 await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
 
                 await message.answer(text=message_texts.hunter_successful_registration,
-                                     reply_markup=main_menu_inline_keyboard())
+                                     reply_markup=main_menu_inline_keyboard(answer_menu=True))
             except Exception as e:
                 await session.rollback()
                 logger.error(f'error: {e}')
