@@ -109,7 +109,7 @@ async def format_hunter_register_text(state: FSMContext, tg_id: int):
     email = data.get("email", "—")
     region = data.get("region", "—")
     hunt_type = data.get("hunting_type", "—")
-    comment = data.get("comment")
+    comment = data.get("comment", "—")
 
     text = (
         f"🏹 <b>Еще один охотник!</b>\n\n"
