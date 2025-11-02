@@ -8,6 +8,7 @@ from core.db_requests.postgres_requests import create_hunter_from_state
 from core.decorators.register_decorators import check_user_registration
 from core.filters.chat_type_filters import PrivateChatFilter, private
 from core.handlers.main_menu_handlers import main_menu_handler
+from core.keyboards.inline.general_keyboards import main_menu_inline_keyboard
 from core.keyboards.reply.registration.general_keyboards import home_buttons_keyboard, get_buttons_list_keyboard, \
     confirm_register_keyboard, phone_number_register_keyboard
 from core.logging_config import logger
@@ -207,14 +208,16 @@ async def confirm_application_handler(message: Message, state: FSMContext):
                 await message.answer(message_texts.successful_registration)
                 format_text = await format_hunter_register_text(state, message.from_user.id)
                 await send_text_to_group(message.bot, settings.bots.request_group_id, format_text)
+
+                await message.answer(text=message_texts.hunter_successful_registration,
+                                     reply_markup=main_menu_inline_keyboard())
             except Exception as e:
                 await session.rollback()
                 logger.error(f'error: {e}')
                 await message.answer(message_texts.error_registration)
-
+                await main_menu_handler(message)
 
         await state.clear()  # Сбрасывает состояние после подтверждения
-        await main_menu_handler(message)
     else:
         await message.answer(message_texts.your_buttons,
                              reply_markup=confirm_register_keyboard())
